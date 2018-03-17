@@ -10,6 +10,10 @@ void NewProgramMenu();
 void LoadProgramMenu();
 void NewProcConfigMenu();
 void LoadProcConfigMenu();
-
+void GetStatistics();
+void SetProcessorConfig();
+void GetExecutionTime();
+void  GetNumInstructions();
+ 
 #endif
 
