@@ -5,6 +5,7 @@
 #ifndef _MENU_H
 #define _MENU_H
 
+void InitTool();
 void PrincipalMenu();
 void NewProgramMenu();
 void LoadProgramMenu();

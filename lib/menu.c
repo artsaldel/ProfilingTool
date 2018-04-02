@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#define SIZE_INST_MEM 1024
+#define SIZE_INST_MEM 32768
 
 //Menu configuration
 int selection = 0;
@@ -19,6 +19,15 @@ char processorVersion[30];
 int processorCPI;
 int processorFrequency;
 
+//Program variables
+char* programPath[200];
+
+void InitTool()
+{
+	strcpy(programPath, "program.c");
+	PrincipalMenu();
+}
+
 
 void PrincipalMenu()
 {
@@ -31,34 +40,29 @@ void PrincipalMenu()
 	printf("1. Crear un nuevo programa en C\n");
 	printf("2. Cargar programa en C existente\n");
 	printf("3. Crear un nuevo archivo de configuracion del procesador\n");
-	printf("4. Cargar archivo de configuracion del procesador\n");
-	printf("5. Verificar tiempo de ejecución del programa cargado\n");
-	printf("6. Salir\n\n");
+	printf("4. Verificar tiempo de ejecución del programa cargado\n");
+	printf("5. Salir\n\n");
 	
 	printf("Ingresar # de accion: ");
 	scanf("%10d", &selection);
 
 	if ( selection == 1)
 	{
-		
+		NewProgramMenu();
 	}
 	else if ( selection == 2)
 	{
-		
+		LoadProgramMenu();
 	}
 	else if ( selection == 3)
 	{
-		
+		NewProcConfigMenu();
 	}
 	else if ( selection == 4)
 	{
-
-	}
-	else if ( selection == 5)
-	{
 		GetStatistics();
 	}
-	else if ( selection == 6)
+	else if ( selection == 5)
 	{
 		printf("\nHasta pronto!\n\n");
 	}
@@ -74,32 +78,50 @@ void PrincipalMenu()
 
 void NewProgramMenu()
 {
+	system("nano program.c");
 
+	strcpy(programPath, "program.c");
+
+	//Finishing this menu
+	printf("\nListo, ver el archivo program.c!!!!\n");
+	printf("path = %s", programPath);
+	sleep(3); 
+	//Calling the principal menu
+	PrincipalMenu();
 }
 
 void LoadProgramMenu()
 {
-
+	system("clear");
+	printf("Ingresar el path del programa: ");
+	scanf("%200s", &programPath);
+	PrincipalMenu();
 }
 
 void NewProcConfigMenu()
 {
+	system("nano processor.config");
 
-}
-
-void LoadProcConfigMenu()
-{
-
+	//Finishing this menu
+	printf("\nListo, ver el archivo processor.config!!!!\n");
+	sleep(3); 
+	//Calling the principal menu
+	PrincipalMenu();
 }
 
 void GetStatistics()
 {
+	char compileCommand [200];
+	strcpy(compileCommand, "riscv32-unknown-elf-gcc ");
+	strcat(compileCommand, programPath);
+	strcat(compileCommand, " -nostartfiles -Tlink.ld -o program");
+
 	//Compiling
-	system("riscv32-unknown-elf-gcc float.c -nostartfiles -Tlink.ld -o program");
+	system(compileCommand);
 	//Creating the ObjDump
 	system("riscv32-unknown-elf-objdump -d program > program.dump");
 	//Creating the assembler
-	system("elf2hex 4 1024 program > binary.txt");
+	system("elf2hex 4 32768 program > binary.txt");
 	//Create the final binary and get the number of instruction to execute
 	GetNumInstructions();
 	//Clearing the terminal
@@ -111,6 +133,7 @@ void GetStatistics()
 
 	//Finishing this menu
 	printf("\nListo, ver el archivo timeResults.txt!!!!\n");
+	printf("command = %s", compileCommand);
 	sleep(3); 
 	//Calling the principal menu
 	PrincipalMenu();
