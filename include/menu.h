@@ -14,7 +14,8 @@ void LoadProcConfigMenu();
 void GetStatistics();
 void SetProcessorConfig();
 void GetExecutionTime();
-void  GetNumInstructions();
+void CleanBinary();
+void GetNumInstructions();
  
 #endif
 

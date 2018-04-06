@@ -1,5 +1,5 @@
 ********** EXECUTION TIME **********
 
-Execution time = 0.005484 ms
+Execution time = 0.003984 ms
 
 ***********************************

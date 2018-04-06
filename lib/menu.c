@@ -93,7 +93,7 @@ void NewProgramMenu()
 void LoadProgramMenu()
 {
 	system("clear");
-	printf("Ingresar el path del programa: ");
+	printf("Ingresar el nombre del programa (.c): ");
 	scanf("%200s", &programPath);
 	PrincipalMenu();
 }
@@ -114,7 +114,8 @@ void GetStatistics()
 	char compileCommand [200];
 	strcpy(compileCommand, "riscv32-unknown-elf-gcc ");
 	strcat(compileCommand, programPath);
-	strcat(compileCommand, " -nostartfiles -Tlink.ld -o program");
+	strcat(compileCommand, " -o program");
+	//strcat(compileCommand, " -nostartfiles -Tlink.ld -o program");
 
 	//Compiling
 	system(compileCommand);
@@ -122,6 +123,8 @@ void GetStatistics()
 	system("riscv32-unknown-elf-objdump -d program > program.dump");
 	//Creating the assembler
 	system("elf2hex 4 32768 program > binary.txt");
+	//Clean the final binary
+	CleanBinary();
 	//Create the final binary and get the number of instruction to execute
 	GetNumInstructions();
 	//Clearing the terminal
@@ -130,18 +133,17 @@ void GetStatistics()
 	SetProcessorConfig();
 	//Writing to the output file the execution time
 	GetExecutionTime(numInstructions);
-
+	//Showing the file timeResult.txt
+	system("cat timeResults.txt");
 	//Finishing this menu
 	printf("\nListo, ver el archivo timeResults.txt!!!!\n");
-	printf("command = %s", compileCommand);
 	sleep(3); 
 	//Calling the principal menu
 	PrincipalMenu();
 }
 
-void GetNumInstructions()
+void CleanBinary()
 {
-	numInstructions = 0;
 	FILE* fullProgram = fopen("binary.txt","r");
 	FILE* liteProgram = fopen ("executableBinary.txt", "w+");
 	char line[16];
@@ -153,11 +155,30 @@ void GetNumInstructions()
 		if(strncmp(line,cmp,8) != 0) 
 		{
 			fprintf(liteProgram, "%s",line);
-			numInstructions++;
 		} 
 	}
 	fclose(fullProgram);
 	fclose(liteProgram);
+
+	//Open the final binary 
+	system("subl executableBinary.txt");
+}
+
+void GetNumInstructions()
+{
+	numInstructions = 0;
+	system("rv-jit -P -l program > numInstructions.txt");
+	FILE* fileNumInsructions = fopen("numInstructions.txt","r");
+	while(!feof(fileNumInsructions))
+	{
+		int ch = fgetc(fileNumInsructions);
+		if(ch == '\n')
+		{
+			numInstructions++;
+  		}
+	}
+	printf("Numero de instrucciones = %d", numInstructions);
+	system("rm numInstructions.txt");
 }
 
 void SetProcessorConfig()

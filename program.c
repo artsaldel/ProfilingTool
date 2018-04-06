@@ -21,6 +21,11 @@ void main()
 	float subFloat = SubFloat(9.2, 2.1);
 	float multFloat = MultFloat(2.9, 3.1);
 	float divFloat = DivFloat(2.1, 6.2);
+
+	for( int i = 0 ; i < 10; i++)
+	{
+		SumInt(1,i);
+	}
 }
 
 int SumInt(int a, int b)
