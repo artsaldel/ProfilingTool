@@ -16,6 +16,14 @@ void SetProcessorConfig();
 void GetExecutionTime();
 void CleanBinary();
 void GetNumInstructions();
+int CompareStrings(char*, char*);
+void RemoveSpaces(char*);
+float ExecutionTimeOfMulticycle(int,int,int,int, int);
+int IsLoad(char*);
+int IsStore(char*);
+int IsArithmetic(char*);
+int IsControl(char*);
+int IsSystemCall(char*);
  
 #endif
 

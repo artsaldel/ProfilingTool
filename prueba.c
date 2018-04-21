@@ -2,10 +2,9 @@
 
 void main()
 {
-	int num = 0;
-	for (int  i = 0; i < 2; i++)
+	float num = 0;
+	for (int  i = 0; i < 10; i++)
 	{
-		num = i;
-		i += 1;
+		num = num + 1.0;
 	}
 }
