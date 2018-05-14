@@ -13,11 +13,18 @@ int selection = 0;
 int numInstructions = 0;
 
 
-//Processor configuration
+//Processor configuration 
 char processorType[30];
 char processorVersion[30];
-int processorCPI;
-int processorFrequency;
+int processorCPI = 0;
+int processorFrequency = 0;
+int percentageBranchs = 0;
+
+int cpiLoads = 0;
+int cpiStores = 0;
+int cpiArithmetics = 0;
+int cpiControl = 0;
+int cpiSystemCalls = 0;
 
 //Program variables
 char* programPath[200];
@@ -40,9 +47,10 @@ void PrincipalMenu()
 	
 	printf("1. Crear un nuevo programa en C\n");
 	printf("2. Cargar programa en C existente\n");
-	printf("3. Crear un nuevo archivo de configuracion del procesador\n");
-	printf("4. Verificar tiempo de ejecución del programa cargado\n");
-	printf("5. Salir\n\n");
+	printf("3. Editar archivo de configuracion del procesador Pipeline\n");
+	printf("4. Editar archivo de configuracion del procesador Multiciclo\n");
+	printf("5. Verificar tiempo de ejecución del programa cargado\n");
+	printf("6. Salir\n\n");
 	
 	printf("Ingresar # de accion: ");
 	scanf("%10d", &selection);
@@ -58,13 +66,17 @@ void PrincipalMenu()
 	}
 	else if ( selection == 3)
 	{
-		NewProcConfigMenu();
+		NewProcConfigMenu(1);
 	}
 	else if ( selection == 4)
 	{
-		GetStatistics();
+		NewProcConfigMenu(2);
 	}
 	else if ( selection == 5)
+	{
+		GetStatistics();
+	}
+	else if ( selection == 6)
 	{
 		printf("\nHasta pronto!\n\n");
 	}
@@ -81,37 +93,37 @@ void PrincipalMenu()
 //Create a new program
 void NewProgramMenu()
 {
-	system("nano program.c");
-
-	strcpy(programPath, "program.c");
-
-	//Finishing this menu
-	printf("\nListo, ver el archivo program.c!!!!\n");
-	printf("path = %s", programPath);
+	system("nano program.c"); //Opening the program.c
+	strcpy(programPath, "program.c"); //Creating the new path
+	printf("\nListo, ver el archivo program.c!!!!\n"); //Finishing this menu
 	sleep(3); 
-	//Calling the principal menu
-	PrincipalMenu();
+	PrincipalMenu(); //Calling the principal menu
 }
 
 //Change the program to be compiled
 void LoadProgramMenu()
 {
-	system("clear");
+	system("clear"); //Clearing the terminal
 	printf("Ingresar el nombre del programa (.c): ");
-	scanf("%200s", &programPath);
-	PrincipalMenu();
+	scanf("%200s", &programPath); //Copying the new path
+	PrincipalMenu(); //Restart the principal menu
 }
 
 //Change the configuration file
-void NewProcConfigMenu()
+void NewProcConfigMenu(int arch)
 {
-	system("nano processor.config");
-
-	//Finishing this menu
-	printf("\nListo, ver el archivo processor.config!!!!\n");
+	if (arch == 1)
+	{
+		system("nano config_pipeline.config"); //Opening the required file for pipeline configuration
+		printf("\nListo, ver el archivo config_pipeline.config!!!!\n"); //Finishing this menu
+	}
+	else if (arch == 2)
+	{
+		system("nano config_multicycle.config"); //Opening the required file for multicyle configuration
+		printf("\nListo, ver el archivo config_multicycle.config!!!!\n"); //Finishing this menu
+	}
 	sleep(3); 
-	//Calling the principal menu
-	PrincipalMenu();
+	PrincipalMenu(); //Calling the principal menu
 }
 
 //Start getting the statistics
@@ -120,28 +132,25 @@ void GetStatistics()
 	char compileCommand [200];
 	strcpy(compileCommand, "riscv32-unknown-elf-gcc ");
 	strcat(compileCommand, programPath);
-	strcat(compileCommand, " -o program -Os");//-Os para optimizacion de velocidad
+	strcat(compileCommand, " -o program");
+	//strcat(compileCommand, " -o program -Os");//-Os para optimizacion de velocidad
 	//strcat(compileCommand, " -nostartfiles -Tlink.ld -o program");
-
-	//Compiling
-	system(compileCommand);
-	//Creating the ObjDump
-	system("riscv32-unknown-elf-objdump -d program > program.dump");
-	//Creating the assembler
-	system("elf2hex 4 32768 program > binary.txt");
-	//Clean the final binary
-	CleanBinary();
-	//Create the final binary and get the number of instruction to execute
-	GetNumInstructions();
-	//Clearing the terminal
-	system("clear");
-	//Set the configuration of the processor
-	SetProcessorConfig();
-	//Writing to the output file the execution time
-	GetExecutionTime();
+	system(compileCommand); //Compiling
+	system("riscv32-unknown-elf-objdump -d program > program.dump"); //Creating the ObjDump
+	system("elf2hex 4 32768 program > binary.txt"); //Creating the assembler
+	CleanBinary(); //Clean the final binary
+	GetNumInstructions(); //Create the final binary and get the number of instructions to execute
+	system("clear");//Clearing the terminal
+	printf("Sobre cuál arquitectura desea simular?\n\n"); //Set the configuration of the processor
+	printf("1. Pipeline\n");
+	printf("2. Multiciclo\n\n");
+	printf("Ingrese la opcion: ");
+	int archSelection = 0;
+	scanf("%10d", &archSelection);
+	SetProcessorConfig(archSelection);
+	GetExecutionTime(); //Writing to the output file the execution time
 	sleep(4);
-	//Calling the principal menu
-	PrincipalMenu();
+	PrincipalMenu(); //Calling the principal menu
 }
 
 //Clear the generated binary file
@@ -180,15 +189,31 @@ void GetNumInstructions()
   		}
 	}
 	//printf("Numero de instrucciones = %d", numInstructions);
-	system("rm numInstructions.txt");
+	//system("rm numInstructions.txt");
 }
 
-//Change the configiration file
-void SetProcessorConfig()
+//Change the configuration file
+void SetProcessorConfig(int archSelection)
 {
-	FILE* configFile = fopen("processor.config","r");
+	if (archSelection == 1) //Selection of the configuration: 1=pipeline, 2=multicycle
+		SetProcessorConfigPipeline(); //Getting the configuration of the pipeline architecture
+	else if (archSelection == 2)
+		SetProcessorConfigMulticycle(); //Getting the configuration of the multicycle architecture
+	else
+	{
+		system("clear"); //Clearing the terminal
+		printf("Ingrese una opción válida\n\n"); //Warning message
+		sleep(3); 
+		GetStatistics(); //Returning to the Get Statistics Menu
+	}
+}
+
+//Getting data for the pipeline configuration
+void SetProcessorConfigPipeline()
+{
+	FILE* configFile = fopen("config_pipeline.config","r");
 	char line[50];
-	for (int ctdr = 0; ctdr < 4; ctdr++)
+	for (int ctdr = 0; ctdr < 5; ctdr++)
 	{
 		fgets(line, sizeof(line), configFile);
 		char *set = strtok(line, "=");
@@ -203,6 +228,41 @@ void SetProcessorConfig()
 				processorCPI = atoi(set);
 			else if (ctdr == 3)
 				processorFrequency = atoi(set);
+			else if (ctdr == 4)
+				percentageBranchs = atoi(set);
+		}
+	}
+	fclose(configFile);
+}
+
+//Getting data for the multicycle configuration
+void SetProcessorConfigMulticycle()
+{
+	FILE* configFile = fopen("config_multicycle.config","r");
+	char line[50];
+	for (int ctdr = 0; ctdr < 8; ctdr++)
+	{
+		fgets(line, sizeof(line), configFile);
+		char *set = strtok(line, "=");
+		set = strtok(NULL, "=");
+		if (set != NULL)
+		{
+			if (ctdr == 0)
+				strcpy(processorType, set);
+			else if (ctdr == 1)
+				strcpy(processorVersion, set);
+			else if (ctdr == 2)
+				cpiLoads = atoi(set);
+			else if (ctdr == 3)
+				cpiStores = atoi(set);
+			else if (ctdr == 4)
+				cpiArithmetics = atoi(set);
+			else if (ctdr == 5)
+				cpiControl = atoi(set);
+			else if (ctdr == 6)
+				cpiSystemCalls = atoi(set);
+			else if (ctdr == 7)
+				processorFrequency = atoi(set);
 		}
 	}
 	fclose(configFile);
@@ -212,36 +272,10 @@ void SetProcessorConfig()
 void GetExecutionTime()
 {
 	float executionTime = 0.0;
-	if (CompareStrings(processorType, "multicycle"))
-	{
-		int cpiLoads = 0;
-		int cpiStores = 0;
-		int cpiArithmetics = 0;
-		int cpiControl = 0;
-		int cpiSystemCalls = 0;
-
-		printf("Debido a que el procesador es multiciclo,\nnecesitamos saber el CPI de los diferentes tipos  de instrucciones:\n\n");
-		printf("Ingresar CPI de instrucciones de carga: ");
-		scanf("%10d", &cpiLoads);
-		printf("Ingresar CPI de instrucciones de almacenamiento: ");
-		scanf("%10d", &cpiStores);
-		printf("Ingresar CPI de instrucciones aritméticas: ");
-		scanf("%10d", &cpiArithmetics);
-		printf("Ingresar CPI de instrucciones de control de flujo: ");
-		scanf("%10d", &cpiControl);
-		printf("Ingresar CPI de instrucciones de llamadas al sistema: ");
-		scanf("%10d", &cpiSystemCalls);
-
-		executionTime = ExecutionTimeOfMulticycle(cpiLoads, cpiStores, cpiArithmetics, cpiControl, cpiSystemCalls);
-
-		//printf("Cargas = %d\nAlmacenamientos = %d\nAritmeticas = %d\nSysCalls = %d\n\n", cpiLoads, cpiStores, cpiArithmetics, cpiSystemCalls);
-	}
-	else if (CompareStrings(processorType, "pipeline"))
-	{
-		//Calculating the execution time
-		executionTime = (processorCPI * numInstructions) / ((float) processorFrequency );
-	}
-	
+	if (CompareStrings(processorType, "pipeline"))
+		executionTime = (processorCPI * numInstructions) / ((float) processorFrequency ); //Calculating the execution time of the pipeline architecture
+	else if (CompareStrings(processorType, "multicycle"))
+		executionTime = ExecutionTimeOfMulticycle(); //Calculating the execution time of the multicycle architecture
 
 	if (executionTime != 0.0)
 	{
@@ -251,71 +285,31 @@ void GetExecutionTime()
 		fprintf(timesFile, "Execution time = %.6f ms\n\n", executionTime * 1000.0 );
 		fprintf(timesFile, "%s","***********************************");
 		fclose(timesFile);
-
-		//Showing the file timeResult.txt
-		system("cat timeResults.txt");
-
-		//Finishing this menu
-		printf("\n\nListo, ver el archivo timeResults.txt!!!!\n");
+		system("cat timeResults.txt"); //Showing the file timeResult.txt
+		printf("\n\nListo, ver el archivo timeResults.txt!!!!\n"); //Finishing this menu
 	}
 	else
-	{
 		printf("Configuración de procesador no reconocida, vuelva a intentarlo.\n");
-	}
 }
 
-int CompareStrings (char *s1, char *s2)
+float ExecutionTimeOfMulticycle()
 {
-	char s1c;
-	char s2c;
-	do
-	{
-		s1c = *(s1++);
-		s2c = *(s2++);
-		if (s1c == '\n' || s1c == '\0')
-			s1c = 0;
-		if (s2c == '\n' || s2c == '\0')
-			s2c = 0;
-		if (s1c != s2c)
-			return 0;
-	}
-	while (s1c);        
-	return 1;
-}
-
-void RemoveSpaces(char *str)
-{
-	// To keep track of non-space character count
-    int count = 0;
- 
-    // Traverse the given string. If current character
-    // is not space, then place it at index 'count++'
-    for (int i = 0; str[i]; i++)
-        if (str[i] != ' ')
-            str[count++] = str[i]; // here count is
-                                   // incremented
-    str[count] = '\0';
-}
-
-float ExecutionTimeOfMulticycle(int cpiLoads, int cpiStores, int cpiArithmetics, int cpiControl, int cpiSystemCalls)
-{
+	//Initiating the variables for the ammount of instructions per types
 	int quantityLoads = 0;
 	int quantityStores = 0;
 	int quantityArithmetics = 0;
 	int quantityControl = 0;
 	int quantitySystemCalls = 0;
 	int quantityOthers = 0;
-
-	system("rv-bin histogram -I program > instructionsQuantity.txt");
 	
-	FILE * fp = fopen("instructionsQuantity.txt", "r");
+	system("rv-bin histogram -I program > instructionsQuantity.txt"); //Creating a file to grab the ammount of instructions
+	FILE * fp = fopen("instructionsQuantity.txt", "r"); //Reading the file with all the simulated program
+    
     char * line = NULL;
     size_t len = 0;
     ssize_t read;
-
     if (fp == NULL)
         exit(EXIT_FAILURE);
-
     while ((read = getline(&line, &len, fp)) != -1) {
     	//Getting the data of ammount of instruction to execute
         char *set1 = strtok(line, ".");
@@ -330,9 +324,8 @@ float ExecutionTimeOfMulticycle(int cpiLoads, int cpiStores, int cpiArithmetics,
         set2 = strtok(NULL, "[");
         char *set3 = strtok(set2, "]");
         int quantity = atoi(set3);
-        //printf("InstName = %s, Quantity = %d\n", instName, quantity);
 
-        //Identifyeng the type of instruction
+        //Identifying the type of instruction
         if (IsLoad(instName))
         	quantityLoads += quantity;
         else if (IsStore(instName))
@@ -360,6 +353,13 @@ float ExecutionTimeOfMulticycle(int cpiLoads, int cpiStores, int cpiArithmetics,
     float percControl = ((float)quantityControl/numInstructions);
     float percSysCalls = ((float)quantitySystemCalls/numInstructions);
     float percOther = ((float)quantityOthers/numInstructions);
+
+    printf("Perc loads = %f\n", percLoads);
+    printf("Perc stores = %f\n", percStores);
+    printf("Perc arithm = %f\n", percArith);
+    printf("Perc control = %f\n", percControl);
+    printf("Perc syscalls = %f\n", percSysCalls);
+    printf("Perc others = %f\n", percOther);
 
     float exeTime = (numInstructions * (percLoads * cpiLoads + percStores * cpiStores + percArith * cpiArithmetics + 
     									percControl * cpiControl + percSysCalls * cpiSystemCalls + percOther * 1 ) )/((float) processorFrequency );
@@ -417,4 +417,39 @@ int IsSystemCall (char *s1)
 		return 1;
 	}
 	return 0;
+}
+
+//Comparing strings
+int CompareStrings (char *s1, char *s2)
+{
+	char s1c;
+	char s2c;
+	do
+	{
+		s1c = *(s1++);
+		s2c = *(s2++);
+		if (s1c == '\n' || s1c == '\0')
+			s1c = 0;
+		if (s2c == '\n' || s2c == '\0')
+			s2c = 0;
+		if (s1c != s2c)
+			return 0;
+	}
+	while (s1c);        
+	return 1;
+}
+
+//Removing all the spaces of a string
+void RemoveSpaces(char *str)
+{
+	// To keep track of non-space character count
+    int count = 0;
+ 
+    // Traverse the given string. If current character
+    // is not space, then place it at index 'count++'
+    for (int i = 0; str[i]; i++)
+        if (str[i] != ' ')
+            str[count++] = str[i]; // here count is
+                                   // incremented
+    str[count] = '\0';
 }
