@@ -308,7 +308,6 @@ float ExecutionTimeOfMulticycle()
     char * line = NULL;
     size_t len = 0;
     ssize_t read;
-    int ctdr = 0;
     if (fp == NULL)
         exit(EXIT_FAILURE);
     while ((read = getline(&line, &len, fp)) != -1) {
@@ -319,8 +318,6 @@ float ExecutionTimeOfMulticycle()
         char instName[20];
         strcpy(instName, set2);
         RemoveSpaces(instName);
-        printf("%d - %s\n ", ctdr, instName);
-        ctdr++;
 
         //Identifying the type of instruction
         if (IsLoad(instName))
@@ -350,14 +347,14 @@ float ExecutionTimeOfMulticycle()
     float percControl = ((float)quantityControl/numInstructions);
     float percSysCalls = ((float)quantitySystemCalls/numInstructions);
     float percOther = ((float)quantityOthers/numInstructions);
-
+    /*
     printf("Perc loads = %f\n", percLoads);
     printf("Perc stores = %f\n", percStores);
     printf("Perc arithm = %f\n", percArith);
     printf("Perc control = %f\n", percControl);
     printf("Perc syscalls = %f\n", percSysCalls);
     printf("Perc others = %f\n", percOther);
-
+	*/
     float exeTime = (numInstructions * (percLoads * cpiLoads + percStores * cpiStores + percArith * cpiArithmetics + 
     									percControl * cpiControl + percSysCalls * cpiSystemCalls + percOther * 1 ) )/((float) processorFrequency );
 
