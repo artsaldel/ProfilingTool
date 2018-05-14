@@ -302,42 +302,39 @@ float ExecutionTimeOfMulticycle()
 	int quantitySystemCalls = 0;
 	int quantityOthers = 0;
 	
-	system("rv-bin histogram -I program > instructionsQuantity.txt"); //Creating a file to grab the ammount of instructions
-	FILE * fp = fopen("instructionsQuantity.txt", "r"); //Reading the file with all the simulated program
+	//system("rv-bin histogram -I program > instructionsQuantity.txt"); //Creating a file to grab the ammount of instructions
+	FILE * fp = fopen("numInstructions.txt", "r"); //Reading the file with all the simulated program
     
     char * line = NULL;
     size_t len = 0;
     ssize_t read;
+    int ctdr = 0;
     if (fp == NULL)
         exit(EXIT_FAILURE);
     while ((read = getline(&line, &len, fp)) != -1) {
     	//Getting the data of ammount of instruction to execute
-        char *set1 = strtok(line, ".");
-        set1 = strtok(NULL, ".");
-        char *set2 = strtok(set1, "[");
-
+        char *set1 = strtok(line, ")");
+        set1 = strtok(NULL, ")");
+        char *set2 = strtok(set1, " ");
         char instName[20];
         strcpy(instName, set2);
         RemoveSpaces(instName);
-        
-
-        set2 = strtok(NULL, "[");
-        char *set3 = strtok(set2, "]");
-        int quantity = atoi(set3);
+        printf("%d - %s\n ", ctdr, instName);
+        ctdr++;
 
         //Identifying the type of instruction
         if (IsLoad(instName))
-        	quantityLoads += quantity;
+        	quantityLoads++;
         else if (IsStore(instName))
-        	quantityStores += quantity;
+        	quantityStores++;
         else if (IsArithmetic(instName))
-        	quantityArithmetics += quantity;
+        	quantityArithmetics++;
         else if (IsControl(instName))
-        	quantityControl += quantity;
+        	quantityControl++;
         else if (IsSystemCall(instName))
-        	quantitySystemCalls += quantity;
+        	quantitySystemCalls++;
         else
-        	quantityOthers += quantity;
+        	quantityOthers++;
     }
     fclose(fp);
     if (line)
@@ -391,7 +388,7 @@ int IsArithmetic (char *s1)
 	if (CompareStrings(s1,"addi") || CompareStrings(s1,"slti") || CompareStrings(s1,"sltiu") || CompareStrings(s1,"xori") || CompareStrings(s1,"ori") || 
 		CompareStrings(s1,"andi") || CompareStrings(s1,"slli") || CompareStrings(s1,"srli") || CompareStrings(s1,"srai") || CompareStrings(s1,"add") ||
 		CompareStrings(s1,"sub") || CompareStrings(s1,"sll") || CompareStrings(s1,"slt") || CompareStrings(s1,"sltu") || CompareStrings(s1,"xor") ||
-		CompareStrings(s1,"srl") || CompareStrings(s1,"sra") || CompareStrings(s1,"or") || CompareStrings(s1,"and") || CompareStrings(s1,""))
+		CompareStrings(s1,"srl") || CompareStrings(s1,"sra") || CompareStrings(s1,"or") || CompareStrings(s1,"and") || CompareStrings(s1,"mv"))
 	{
 		return 1;
 	}
