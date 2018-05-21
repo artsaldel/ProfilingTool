@@ -2,6 +2,6 @@
 
 ********** EXECUTION TIME **********
 
-Execution time = 0.024248 ms
+Execution time = 0.005416 ms
 
 ***********************************
