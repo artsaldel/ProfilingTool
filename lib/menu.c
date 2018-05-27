@@ -18,7 +18,6 @@ char processorType[30];
 char processorVersion[30];
 int processorCPI = 0;
 int processorFrequency = 0;
-int percentageBranchs = 0;
 
 int cpiLoads = 0;
 int cpiStores = 0;
@@ -29,14 +28,19 @@ int cpiSystemCalls = 0;
 //Program variables
 char* programPath[200];
 
-//Starts the application
+/*
+This is the function called from the main. It basically starts the application.
+*/
 void InitTool()
 {
 	strcpy(programPath, "program.c");
 	PrincipalMenu();
 }
 
-//Aux for starting application
+/*
+This method provides de terminal user interface, where the user can select
+the action to be execeted in the simulation.
+*/
 void PrincipalMenu()
 {
 	system("clear");
@@ -90,7 +94,11 @@ void PrincipalMenu()
 	
 }
 
-//Create a new program
+/*
+If the user selects the action #1, the application provides a new program
+in C to be edited, this program is called program.c and should be founded
+in the root directory.
+*/
 void NewProgramMenu()
 {
 	system("nano program.c"); //Opening the program.c
@@ -100,7 +108,10 @@ void NewProgramMenu()
 	PrincipalMenu(); //Calling the principal menu
 }
 
-//Change the program to be compiled
+/*
+If the user selects the action #2, the application provides the option
+to enter a new program written in C path to be simulated.
+*/
 void LoadProgramMenu()
 {
 	system("clear"); //Clearing the terminal
@@ -109,7 +120,10 @@ void LoadProgramMenu()
 	PrincipalMenu(); //Restart the principal menu
 }
 
-//Change the configuration file
+/*
+If the user selects the action #3 or action #4, the application provides the capability 
+to edit the architecture configuration for pipeline o multicycle archs. Depends on the user entry.
+*/
 void NewProcConfigMenu(int arch)
 {
 	if (arch == 1)
@@ -126,15 +140,18 @@ void NewProcConfigMenu(int arch)
 	PrincipalMenu(); //Calling the principal menu
 }
 
-//Start getting the statistics
+/*
+If the user selects the action #5, the application starts the simulation mode. The user should
+provide the architecture in which the execution times will be simulated. 
+1 -> for simulation in pipeline
+2 -> for simulation in muticycle
+*/
 void GetStatistics()
 {
 	char compileCommand [200];
 	strcpy(compileCommand, "riscv32-unknown-elf-gcc ");
 	strcat(compileCommand, programPath);
 	strcat(compileCommand, " -o program");
-	//strcat(compileCommand, " -o program -Os");//-Os para optimizacion de velocidad
-	//strcat(compileCommand, " -nostartfiles -Tlink.ld -o program");
 	system(compileCommand); //Compiling
 	system("riscv32-unknown-elf-objdump -d program > program.dump"); //Creating the ObjDump
 	system("elf2hex 4 32768 program > binary.txt"); //Creating the assembler
@@ -153,7 +170,12 @@ void GetStatistics()
 	PrincipalMenu(); //Calling the principal menu
 }
 
-//Clear the generated binary file
+/*
+The generated elf from risc-v toochain has lot of garbage, binaries 
+without no sense. This method take off the garbage from the elf
+and provides an executable binary. This file should be in the root directory
+of the app.
+*/
 void CleanBinary()
 {
 	FILE* fullProgram = fopen("binary.txt","r");
@@ -173,7 +195,11 @@ void CleanBinary()
 	fclose(liteProgram);
 }
 
-//Get the number of instruction generated in a program
+/*
+Using the rv8 simulator, this method finds the total number of instruction
+of the program provided by the user. The total simulation is in a file called
+numInstructions.txt founded in the root directory.
+*/
 void GetNumInstructions()
 {
 	//Counting the ammount of instructions, icluding loops and everything
@@ -188,11 +214,14 @@ void GetNumInstructions()
 			numInstructions++;
   		}
 	}
-	//printf("Numero de instrucciones = %d", numInstructions);
-	//system("rm numInstructions.txt");
 }
 
-//Change the configuration file
+/*
+Grab the data inserted by the user in the processor configuration files. 
+Depends on the user entry.
+if archSelection equals to 1 = Pipeline architecture.
+if archSelection equals to 2 = Multicycle architecture.
+*/
 void SetProcessorConfig(int archSelection)
 {
 	if (archSelection == 1) //Selection of the configuration: 1=pipeline, 2=multicycle
@@ -208,7 +237,10 @@ void SetProcessorConfig(int archSelection)
 	}
 }
 
-//Getting data for the pipeline configuration
+/*
+This method is used by the method SetProcessorConfig(int archSelection) to
+grab the data of the configuration file of the pipeline architecture.
+*/
 void SetProcessorConfigPipeline()
 {
 	FILE* configFile = fopen("config_pipeline.config","r");
@@ -228,14 +260,15 @@ void SetProcessorConfigPipeline()
 				processorCPI = atoi(set);
 			else if (ctdr == 3)
 				processorFrequency = atoi(set);
-			else if (ctdr == 4)
-				percentageBranchs = atoi(set);
 		}
 	}
 	fclose(configFile);
 }
 
-//Getting data for the multicycle configuration
+/*
+This method is used by the method SetProcessorConfig(int archSelection) to
+grab the data of the configuration file of the multicycle architecture.
+*/
 void SetProcessorConfigMulticycle()
 {
 	FILE* configFile = fopen("config_multicycle.config","r");
@@ -268,7 +301,11 @@ void SetProcessorConfigMulticycle()
 	fclose(configFile);
 }
 
-//Complete the statisttics
+/*
+This method calculate the execution time of the program in a specific architecture.
+Then, the results are saved in a file called timeResults.txt that shoul be
+in the root directory of the application.
+*/
 void GetExecutionTime()
 {
 	float executionTime = 0.0;
@@ -292,6 +329,9 @@ void GetExecutionTime()
 		printf("Configuración de procesador no reconocida, vuelva a intentarlo.\n");
 }
 
+/*
+This method finds the execution time in a multicycle architecture.
+*/
 float ExecutionTimeOfMulticycle()
 {
 	//Initiating the variables for the ammount of instructions per types
@@ -302,7 +342,6 @@ float ExecutionTimeOfMulticycle()
 	int quantitySystemCalls = 0;
 	int quantityOthers = 0;
 	
-	//system("rv-bin histogram -I program > instructionsQuantity.txt"); //Creating a file to grab the ammount of instructions
 	FILE * fp = fopen("numInstructions.txt", "r"); //Reading the file with all the simulated program
     
     char * line = NULL;
@@ -347,20 +386,16 @@ float ExecutionTimeOfMulticycle()
     float percControl = ((float)quantityControl/numInstructions);
     float percSysCalls = ((float)quantitySystemCalls/numInstructions);
     float percOther = ((float)quantityOthers/numInstructions);
-    /*
-    printf("Perc loads = %f\n", percLoads);
-    printf("Perc stores = %f\n", percStores);
-    printf("Perc arithm = %f\n", percArith);
-    printf("Perc control = %f\n", percControl);
-    printf("Perc syscalls = %f\n", percSysCalls);
-    printf("Perc others = %f\n", percOther);
-	*/
     float exeTime = (numInstructions * (percLoads * cpiLoads + percStores * cpiStores + percArith * cpiArithmetics + 
     									percControl * cpiControl + percSysCalls * cpiSystemCalls + percOther * 1 ) )/((float) processorFrequency );
 
 	return exeTime;
 }
 
+/*
+s1 is a string with the value of an instruction from the Risc-V Instruction Set Architecture.
+This method return 1 if the instruction is a load instruction and 0 if not.
+*/
 int IsLoad (char *s1)
 {
 	if (CompareStrings(s1,"lui") || CompareStrings(s1,"lb") || CompareStrings(s1,"lh") || CompareStrings(s1,"lw") || CompareStrings(s1,"lbu") || 
@@ -371,6 +406,10 @@ int IsLoad (char *s1)
 	return 0;
 }
 
+/*
+s1 is a string with the value of an instruction from the Risc-V Instruction Set Architecture.
+This method return 1 if the instruction is a store instruction and 0 if not.
+*/
 int IsStore (char *s1)
 {
 	if (CompareStrings(s1,"sb") || CompareStrings(s1,"sh") || CompareStrings(s1,"sw") )
@@ -380,6 +419,10 @@ int IsStore (char *s1)
 	return 0;
 }
 
+/*
+s1 is a string with the value of an instruction from the Risc-V Instruction Set Architecture.
+This method return 1 if the instruction is an arithmetic instruction and 0 if not.
+*/
 int IsArithmetic (char *s1)
 {
 	if (CompareStrings(s1,"addi") || CompareStrings(s1,"slti") || CompareStrings(s1,"sltiu") || CompareStrings(s1,"xori") || CompareStrings(s1,"ori") || 
@@ -392,6 +435,10 @@ int IsArithmetic (char *s1)
 	return 0;
 }
 
+/*
+s1 is a string with the value of an instruction from the Risc-V Instruction Set Architecture.
+This method return 1 if the instruction is a control flow instruction and 0 if not.
+*/
 int IsControl (char *s1)
 {
 	if (CompareStrings(s1,"auipc") || CompareStrings(s1,"jal") || CompareStrings(s1,"jalr") || CompareStrings(s1,"beq") || CompareStrings(s1,"bne") ||
@@ -402,6 +449,10 @@ int IsControl (char *s1)
 	return 0;
 }
 
+/*
+s1 is a string with the value of an instruction from the Risc-V Instruction Set Architecture.
+This method return 1 if the instruction is a system call instruction and 0 if not.
+*/
 int IsSystemCall (char *s1)
 {
 	if (CompareStrings(s1,"fence") || CompareStrings(s1,"fence.i") || CompareStrings(s1,"scall") || CompareStrings(s1,"sbreak") || 
@@ -413,7 +464,9 @@ int IsSystemCall (char *s1)
 	return 0;
 }
 
-//Comparing strings
+/*
+This method compares if 2 strings (s1 and s2) are equal to each other.
+*/
 int CompareStrings (char *s1, char *s2)
 {
 	char s1c;
@@ -433,7 +486,9 @@ int CompareStrings (char *s1, char *s2)
 	return 1;
 }
 
-//Removing all the spaces of a string
+/*
+
+*/
 void RemoveSpaces(char *str)
 {
 	// To keep track of non-space character count
