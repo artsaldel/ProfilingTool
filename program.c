@@ -1,69 +1,29 @@
-#include <stdio.h>
+int N = 9;
 
-int SumInt(int,int);
-int SubInt(int,int);
-int MultInt(int,int);
-int DivInt(int,int);
-
-float SumFloat(float,float);
-float SubFloat(float,float);
-float MultFloat(float,float);
-float DivFloat(float,float);
-
-void main()
+void IcNeighbors(float VD[N],float IC[N],float CONN[N][N])///////////////////////
 {
-	int sumInt = SumInt(1, 2);
-	int multInt = MultInt(2, 3);
-	int subInt = SubInt(5, 2);
-	int divInt = DivInt(3, 3);	
-
-	float sumFloat = SumFloat(2.3, 1.7);
-	float subFloat = SubFloat(9.2, 2.1);
-	float multFloat = MultFloat(2.9, 3.1);
-	float divFloat = DivFloat(2.1, 6.2);
-
-	for( int i = 0 ; i < 10; i++)
+	float V = 0;///////////////////////
+	int i,j;
+	float Facc = 0;///////////////////////
+	float Vacc = 0;///////////////////////
+	float f = 0;///////////////////////
+	for(i=0;i<N;i++)
 	{
-		SumInt(1,i);
+		for(j=0;j<N;j++)
+		{
+			V = VD[i]-VD[j];
+			f = V*34.0;
+			Facc = Facc + f*CONN[i][j];
+			Vacc = Vacc + V*CONN[i][j];
+		}
+		IC[i] = 20.0*Facc + 80.0*Vacc ;
 	}
 }
 
-int SumInt(int a, int b)
+int main()
 {
-	return a + b;
-}
-
-float SumFloat(float a, float b)
-{
-	return a + b;
-}
-
-int SubInt(int a, int b)
-{
-	return a - b;
-}
-
-float SubFloat(float a, float b)
-{
-	return a - b;
-}
-
-int MultInt(int a, int b)
-{
-	return a * b;
-}
-
-float MultFloat(float a, float b)
-{
-	return a * b;
-}
-
-int DivInt(int a, int b)
-{
-	return a / b;
-}
-
-float DivFloat(float a, float b)
-{
-	return a / b;
+	float VD[N];
+	float IC[N];
+	float CONN[N][N];
+	IcNeighbors(VD, IC, CONN);
 }
